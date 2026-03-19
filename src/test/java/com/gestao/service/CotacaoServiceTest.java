@@ -87,9 +87,6 @@ class CotacaoServiceTest {
         request = new CotacaoRequest(VALOR_EMPRESTIMO, PRAZO_MESES);
     }
 
-    // =======================================================================
-    // criarCotacao
-    // =======================================================================
     @Nested
     @DisplayName("criarCotacao")
     class CriarCotacao {
@@ -157,9 +154,7 @@ class CotacaoServiceTest {
         }
     }
 
-    // =======================================================================
-    // listarCotacoesDoUsuario
-    // =======================================================================
+
     @Nested
     @DisplayName("listarCotacoesDoUsuario")
     class ListarCotacoesDoUsuario {
@@ -187,9 +182,7 @@ class CotacaoServiceTest {
         }
     }
 
-    // =======================================================================
-    // obterCotacaoPorId
-    // =======================================================================
+
     @Nested
     @DisplayName("obterCotacaoPorId")
     class ObterCotacaoPorId {
@@ -216,9 +209,6 @@ class CotacaoServiceTest {
         }
     }
 
-    // =======================================================================
-    // atualizarCotacao
-    // =======================================================================
     @Nested
     @DisplayName("atualizarCotacao")
     class AtualizarCotacao {
@@ -267,11 +257,20 @@ class CotacaoServiceTest {
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("12 meses");
         }
+
+        @Test
+        @DisplayName("deve lançar exception quando valor do empréstimo for zero na atualização")
+        void valorZero_lancaIllegalArgumentException() {
+            CotacaoRequest requestInvalido = new CotacaoRequest(BigDecimal.ZERO, PRAZO_MESES);
+            when(cotacaoRepository.findById(1L)).thenReturn(Optional.of(cotacaoAtiva));
+
+            assertThatThrownBy(() -> cotacaoService.atualizarCotacao(1L, requestInvalido))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("maior que zero");
+        }
     }
 
-    // =======================================================================
-    // deletarCotacao
-    // =======================================================================
+
     @Nested
     @DisplayName("deletarCotacao")
     class DeletarCotacao {
