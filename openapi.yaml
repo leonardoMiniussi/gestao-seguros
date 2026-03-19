@@ -1,0 +1,608 @@
+openapi: 3.0.0
+info:
+  title: API Gestão de Seguros
+  version: 1.0.0
+  description: API REST para gestão de seguros com autenticação JWT, cálculo de prêmios e gestão de cotações
+  contact:
+    name: Gestão de Seguros
+    email: suporte@gestaoseguros.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: http://localhost:8080/api
+    description: Desenvolvimento
+  - url: https://api.gestaoseguros.com/api
+    description: Produção
+
+components:
+  securitySchemes:
+    bearer-jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT para autenticação. Use no header Authorization como "Bearer {token}"
+
+  schemas:
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        username:
+          type: string
+          example: joao_silva
+        email:
+          type: string
+          format: email
+          example: joao@example.com
+        nome:
+          type: string
+          example: João Silva
+        ativo:
+          type: boolean
+          example: true
+        criadoEm:
+          type: string
+          format: date-time
+          example: 2024-03-11T10:30:00
+
+    RegistroDTO:
+      type: object
+      required:
+        - username
+        - email
+        - senha
+        - nome
+      properties:
+        username:
+          type: string
+          example: joao_silva
+          description: Nome de usuário único
+        email:
+          type: string
+          format: email
+          example: joao@example.com
+          description: Email do usuário
+        senha:
+          type: string
+          format: password
+          example: senha123
+          description: Senha do usuário (mínimo 6 caracteres)
+        nome:
+          type: string
+          example: João Silva
+          description: Nome completo do usuário
+
+    LoginDTO:
+      type: object
+      required:
+        - username
+        - senha
+      properties:
+        username:
+          type: string
+          example: joao_silva
+          description: Nome de usuário
+        senha:
+          type: string
+          format: password
+          example: senha123
+          description: Senha do usuário
+
+    AuthResponseDTO:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          description: Token JWT para autenticação em requisições futuras
+        tokenType:
+          type: string
+          example: Bearer
+          description: Tipo de token
+        expiresIn:
+          type: integer
+          format: int64
+          example: 86400
+          description: Tempo de expiração do token em segundos
+        usuarioId:
+          type: integer
+          format: int64
+          example: 1
+          description: ID do usuário autenticado
+        username:
+          type: string
+          example: joao_silva
+          description: Username do usuário autenticado
+
+    CotacaoDTO:
+      type: object
+      required:
+        - valorEmprestimo
+        - prazoMeses
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+          readOnly: true
+          description: ID da cotação
+        valorEmprestimo:
+          type: number
+          format: decimal
+          example: 10000.00
+          description: Valor do empréstimo em reais
+        prazoMeses:
+          type: integer
+          example: 36
+          description: Prazo do empréstimo em meses (mínimo 12)
+        taxaPremio:
+          type: number
+          format: decimal
+          example: 0.02
+          readOnly: true
+          description: Taxa de prêmio aplicada (0.02%)
+        taxaCorretagem:
+          type: number
+          format: decimal
+          example: 0.05
+          readOnly: true
+          description: Taxa de corretagem aplicada (5%)
+        premioBruto:
+          type: number
+          format: decimal
+          example: 2.00
+          readOnly: true
+          description: Prêmio bruto calculado
+        corretagemValor:
+          type: number
+          format: decimal
+          example: 0.10
+          readOnly: true
+          description: Valor da corretagem
+        premioTotal:
+          type: number
+          format: decimal
+          example: 2.10
+          readOnly: true
+          description: Prêmio total calculado
+        valorAVista:
+          type: number
+          format: decimal
+          example: 2.10
+          readOnly: true
+          description: Valor para pagamento à vista
+        valorParcelado:
+          type: number
+          format: decimal
+          example: 0.06
+          readOnly: true
+          description: Valor de cada parcela mensal
+        status:
+          type: string
+          example: ATIVA
+          readOnly: true
+          description: "Status da cotação (ATIVA | APROVADA | EXCLUIDA)"
+        criadaEm:
+          type: string
+          format: date-time
+          example: 2024-03-11T10:30:00
+          readOnly: true
+          description: Data de criação
+
+    SeguroResponseDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+          description: ID do seguro
+        usuarioId:
+          type: integer
+          format: int64
+          example: 1
+          description: ID do usuário titular do seguro
+        cotacaoId:
+          type: integer
+          format: int64
+          example: 1
+          description: ID da cotação que originou o seguro
+        valorEmprestimo:
+          type: number
+          format: decimal
+          example: 10000.00
+          description: Valor do empréstimo
+        prazoMeses:
+          type: integer
+          example: 36
+          description: Prazo em meses
+        taxaPremio:
+          type: number
+          format: decimal
+          example: 0.02
+          description: Taxa de prêmio aplicada (0.02%)
+        taxaCorretagem:
+          type: number
+          format: decimal
+          example: 0.05
+          description: Taxa de corretagem aplicada (5%)
+        premioBruto:
+          type: number
+          format: decimal
+          example: 2.00
+          description: Prêmio bruto calculado (valorEmprestimo * taxaPremio)
+        corretagemValor:
+          type: number
+          format: decimal
+          example: 0.10
+          description: Valor da corretagem (premioBruto * taxaCorretagem)
+        premioTotal:
+          type: number
+          format: decimal
+          example: 2.10
+          description: Prêmio total (premioBruto + corretagemValor)
+        valorAVista:
+          type: number
+          format: decimal
+          example: 2.10
+          description: Valor a ser pago à vista
+        valorParcelado:
+          type: number
+          format: decimal
+          example: 0.06
+          description: Valor de cada parcela mensal
+        status:
+          type: string
+          example: ATIVO
+          description: "Status do seguro (ATIVO)"
+        criadoEm:
+          type: string
+          format: date-time
+          example: 2024-03-11T10:30:00
+          description: Data de criação do seguro
+        detalhamento:
+          type: string
+          example: "Prêmio Bruto: R$ 2.00 | Corretagem: R$ 0.10 | Total: R$ 2.10 | Parcela: R$ 0.06/mês"
+          description: Detalhamento dos valores calculados
+
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+
+paths:
+  /auth/registro:
+    post:
+      summary: Registrar novo usuário
+      description: Cria um novo usuário e retorna um token JWT
+      tags:
+        - Autenticação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistroDTO'
+      responses:
+        '201':
+          description: Usuário registrado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseDTO'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Usuário ou email já existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      summary: Login de usuário
+      description: Autentica um usuário e retorna um token JWT
+      tags:
+        - Autenticação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDTO'
+      responses:
+        '200':
+          description: Login bem-sucedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseDTO'
+        '400':
+          description: Dados inválidos
+        '401':
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /cotacoes:
+    get:
+      summary: Listar cotações do usuário
+      description: Retorna todas as cotações do usuário autenticado
+      tags:
+        - Cotações
+      security:
+        - bearer-jwt: []
+      responses:
+        '200':
+          description: Lista de cotações
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CotacaoDTO'
+        '401':
+          description: Não autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Criar nova cotação
+      description: Cria uma nova cotação para o usuário autenticado. Os valores financeiros são calculados automaticamente.
+      tags:
+        - Cotações
+      security:
+        - bearer-jwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CotacaoDTO'
+      responses:
+        '201':
+          description: Cotação criada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CotacaoDTO'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Não autenticado
+
+  /cotacoes/{id}:
+    get:
+      summary: Obter cotação por ID
+      description: Retorna os detalhes de uma cotação específica
+      tags:
+        - Cotações
+      security:
+        - bearer-jwt: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Cotação encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CotacaoDTO'
+        '401':
+          description: Não autenticado
+        '404':
+          description: Cotação não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Atualizar cotação
+      description: Atualiza os dados de uma cotação existente e recalcula os valores financeiros
+      tags:
+        - Cotações
+      security:
+        - bearer-jwt: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CotacaoDTO'
+      responses:
+        '200':
+          description: Cotação atualizada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CotacaoDTO'
+        '400':
+          description: Dados inválidos
+        '401':
+          description: Não autenticado
+        '404':
+          description: Cotação não encontrada
+
+    delete:
+      summary: Deletar cotação
+      description: Marca uma cotação como excluída (status EXCLUIDA)
+      tags:
+        - Cotações
+      security:
+        - bearer-jwt: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Cotação deletada com sucesso
+        '401':
+          description: Não autenticado
+        '404':
+          description: Cotação não encontrada
+
+  /seguros/aprovar/{cotacaoId}:
+    post:
+      summary: Aprovar cotação e emitir seguro
+      description: |
+        Aprova uma cotação **ATIVA** do usuário autenticado e emite o seguro prestamista correspondente.
+        
+        **Regras:**
+        - A cotação deve pertencer ao usuário autenticado.
+        - A cotação deve estar com status **ATIVA** (não pode já ter sido aprovada ou excluída).
+        - Após a aprovação, o status da cotação é alterado para **APROVADA** e um Seguro com status **ATIVO** é criado automaticamente com os dados financeiros da cotação.
+        
+        **Fluxo:**
+        1. Criar cotação → `POST /cotacoes`
+        2. Aprovar cotação → `POST /seguros/aprovar/{cotacaoId}`
+        3. Listar seguros → `GET /seguros/meus-seguros`
+      tags:
+        - Seguros
+      security:
+        - bearer-jwt: []
+      parameters:
+        - name: cotacaoId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID da cotação a ser aprovada
+      responses:
+        '201':
+          description: Seguro emitido com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeguroResponseDTO'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Não autenticado
+        '403':
+          description: Cotação não pertence ao usuário autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Cotação não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Cotação não está com status ATIVA (já foi aprovada ou excluída)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /seguros/meus-seguros:
+    get:
+      summary: Listar meus seguros
+      description: Retorna todos os seguros emitidos do usuário autenticado
+      tags:
+        - Seguros
+      security:
+        - bearer-jwt: []
+      responses:
+        '200':
+          description: Lista de seguros do usuário
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SeguroResponseDTO'
+        '401':
+          description: Não autenticado
+
+  /seguros/{id}:
+    get:
+      summary: Obter detalhes de um seguro
+      description: Retorna os detalhes de um seguro específico pelo ID
+      tags:
+        - Seguros
+      security:
+        - bearer-jwt: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Seguro encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeguroResponseDTO'
+        '401':
+          description: Não autenticado
+        '404':
+          description: Seguro não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+tags:
+  - name: Autenticação
+    description: APIs de autenticação e registro de usuários
+  - name: Cotações
+    description: APIs para gerenciar cotações de seguros prestamistas
+  - name: Seguros
+    description: APIs para aprovação e gerenciamento de seguros prestamistas

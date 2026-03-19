@@ -1,0 +1,288 @@
+{
+  "info": {
+    "name": "Gestão de Seguros API",
+    "description": "Collection para testar a API de Gestão de Seguros com autenticação JWT.\n\nFluxo principal:\n1. Registrar usuário ou fazer login → obter JWT\n2. Criar cotação (POST /cotacoes)\n3. Aprovar cotação → emite seguro (POST /seguros/aprovar/{cotacaoId})\n4. Listar seus seguros (GET /seguros/meus-seguros)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Autenticação",
+      "item": [
+        {
+          "name": "Registrar Novo Usuário",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"joao_silva\",\n  \"email\": \"joao@example.com\",\n  \"senha\": \"senha123\",\n  \"nome\": \"João Silva\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/registro",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "registro"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('jwt_token', jsonData.token);",
+                  "    pm.collectionVariables.set('usuario_id', jsonData.usuarioId);",
+                  "    console.log('Token salvo:', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"joao_silva\",\n  \"senha\": \"senha123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cotações",
+      "item": [
+        {
+          "name": "Listar Cotações",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cotacoes",
+              "host": ["{{base_url}}"],
+              "path": ["cotacoes"]
+            }
+          }
+        },
+        {
+          "name": "Criar Cotação",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.collectionVariables.set('cotacao_id', jsonData.id);",
+                  "    console.log('cotacao_id salvo:', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"valorEmprestimo\": 10000.00,\n  \"prazoMeses\": 36\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cotacoes",
+              "host": ["{{base_url}}"],
+              "path": ["cotacoes"]
+            }
+          }
+        },
+        {
+          "name": "Obter Cotação",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cotacoes/{{cotacao_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["cotacoes", "{{cotacao_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Cotação",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"valorEmprestimo\": 15000.00,\n  \"prazoMeses\": 48\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cotacoes/{{cotacao_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["cotacoes", "{{cotacao_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Deletar Cotação",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cotacoes/{{cotacao_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["cotacoes", "{{cotacao_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seguros",
+      "item": [
+        {
+          "name": "Aprovar Cotação (Emitir Seguro)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.collectionVariables.set('seguro_id', jsonData.id);",
+                  "    console.log('seguro_id salvo:', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/seguros/aprovar/{{cotacao_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["seguros", "aprovar", "{{cotacao_id}}"]
+            },
+            "description": "Aprova uma cotação ATIVA e emite o seguro correspondente.\n\nPré-requisitos:\n- Ter criado uma cotação (POST /cotacoes) e guardado o cotacao_id\n- A cotação deve estar com status ATIVA\n\nApós a aprovação:\n- A cotação terá status APROVADA\n- Um novo Seguro com status ATIVO será retornado"
+          }
+        },
+        {
+          "name": "Listar Meus Seguros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/seguros/meus-seguros",
+              "host": ["{{base_url}}"],
+              "path": ["seguros", "meus-seguros"]
+            },
+            "description": "Retorna todos os seguros emitidos do usuário autenticado"
+          }
+        },
+        {
+          "name": "Obter Detalhes do Seguro",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/seguros/{{seguro_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["seguros", "{{seguro_id}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080/api"
+    },
+    {
+      "key": "jwt_token",
+      "value": ""
+    },
+    {
+      "key": "usuario_id",
+      "value": ""
+    },
+    {
+      "key": "cotacao_id",
+      "value": ""
+    },
+    {
+      "key": "seguro_id",
+      "value": ""
+    }
+  ]
+}
