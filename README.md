@@ -21,6 +21,12 @@
 java -version
 mvn -version
 ```
+---
+
+## Observações
+- Como foi pedido um sistema simples, optei por manter o projeto compacto e facil dar manutenção.
+- Mas como uma possivel melhoria e um uma volumetria definida para fazer testes é podemos extender este codigo e aplicar regras de processamento assincrono usando RabbitMQ ou Kafka.
+- Apesar de não estar assim no momento vou deixar um desenho de arquitetura considerando as filas criadas para este processo.
 
 ---
 ## Configuração
@@ -105,3 +111,6 @@ Build e run:
 docker-compose up
 ```
 
+
+### Desenho AWS Services
+![arq.png](arq.png)
