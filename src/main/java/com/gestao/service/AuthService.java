@@ -6,7 +6,6 @@ import com.gestao.dto.AuthResponseDTO;
 import com.gestao.entity.Usuario;
 import com.gestao.repository.UsuarioRepository;
 import com.gestao.security.JwtTokenProvider;
-import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-@Builder
 public class AuthService {
 
     @Autowired
