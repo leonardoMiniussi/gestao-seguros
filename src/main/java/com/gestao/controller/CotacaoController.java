@@ -23,7 +23,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/cotacoes")
+@RequestMapping("/cotacoes")
 @Tag(name = "Cotações", description = "APIs para gerenciar cotações de seguros")
 @SecurityRequirement(name = "bearer-jwt")
 public class CotacaoController {
